@@ -1,0 +1,200 @@
+  
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2.1
+
+executors:
+  java-image:
+    working_directory: /root/repo
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx1024m
+    docker:
+      - image: docker.cloudsmith.io/autonomic/public-images/java
+        auth:
+          username: ${CS_PUBLIC_USERNAME}
+          password: ${CS_PUBLIC_API_TOKEN}
+  gitleaks-image:
+    working_directory: /root/repo
+    docker:
+      - image: docker.cloudsmith.io/autonomic/private-images/gitleaks
+        auth:
+          username: ${CS_PRIVATE_USERNAME}
+          password: ${CS_PRIVATE_API_TOKEN}
+  sonar-image:
+    working_directory: /root/repo
+    environment:
+      LANGUAGE: JAVA-MULTI
+      JAVA_TOOL_OPTIONS: -Xmx1024m
+    docker:
+      - image: docker.cloudsmith.io/autonomic/private-images/sonar
+        auth:
+          username: ${CS_PRIVATE_USERNAME}
+          password: ${CS_PRIVATE_API_TOKEN}
+
+jobs:
+  scan_secrets:
+    executor: gitleaks-image
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - repo
+      - run: gitleaks
+  build:
+    executor: java-image
+    steps:
+      - attach_workspace:
+          at: /root
+      - run:
+          name: Cleanup dependencies
+          command: mvn clean
+      - restore_cache:
+          keys:
+            - tmc-oss-sdk-common-{{ checksum "pom.xml" }}-maven
+      - run:
+          name: Build tmc-oss-sdk-common
+          command: |
+            mvn dependency:go-offline -DskipTests install
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - .m2
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: tmc-oss-sdk-common-{{ checksum "pom.xml" }}-maven
+  test:
+    executor: java-image
+    steps:
+      - attach_workspace:
+          at: /root
+      - run:
+          name: Run unit tests
+          command: mvn verify
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p test-output
+            cp -fr target/site/jacoco test-output
+          when: always
+      - store_test_results:
+          path: test-output
+      - store_artifacts:
+          path: test-output
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - repo/target
+
+  publish-public:
+    executor: java-image
+    working_directory: /root/repo/
+    steps:
+      - attach_workspace:
+          at: /root
+
+      - run:
+          name: Set new version
+          command: |
+            mvn versions:set -DnewVersion=${CIRCLE_TAG}
+            mvn verify -Prun-revapi
+      - run:
+          name: Publish to au-tmc-oss
+          command: mvn deploy -Ppublic
+
+  sonar:
+    executor: sonar-image
+    steps:
+      - attach_workspace:
+          at: /root
+      - run:
+          name: Analyze on SonarCloud
+          command: ../sonar.sh
+
+  dependency-track:
+    executor: java-image
+    steps:
+      - attach_workspace:
+          at: /root
+      - run:
+          name: Upload to Dependency Track
+          command: mvn validate -Pdependency-track
+
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - scan_secrets:
+          context: tmc-cloudsmith-context
+      - build:
+          requires:
+            - scan_secrets
+          filters:
+            branches:
+              # do not build branches which are intended for documentation only
+              ignore:
+                - /.*docs.*/
+                - /.*readme.*/
+          context: tmc-cloudsmith-context
+      - test:
+          requires:
+            - build
+          context: tmc-cloudsmith-context
+      - sonar:
+          requires:
+            - test
+          context:
+            - tmc-oss-context
+            - tmc-cloudsmith-context
+      - dependency-track:
+          filters:
+            branches:
+              only: main
+          requires:
+            - sonar
+          context:
+            - tmc-oss-context
+            - tmc-cloudsmith-context
+
+  release:
+    jobs:
+      #Run Publish on GitHub release
+      - scan_secrets:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          context: tmc-cloudsmith-context
+      - build:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - scan_secrets
+          context: tmc-cloudsmith-context
+      - publish-public:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build
+          context: tmc-cloudsmith-context
+      - dependency-track:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build
+          context:
+            - tmc-oss-context
+            - tmc-cloudsmith-context
