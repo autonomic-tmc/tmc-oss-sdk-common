@@ -17,37 +17,26 @@
  * under the License
  * ______________________________________________________________________________
  */
-package com.autonomic.tmc.exception;
+package com.autonomic.tmc.environment;
 
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_NAME;
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_VERSION;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.autonomic.tmc.environment.ProjectProperties;
-import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Test;
 
-@Slf4j
-public class BaseSdkException extends RuntimeException {
+class EnvironmentDetailsTest {
 
-    BaseSdkException(String message) {
-        super(message);
-    }
+  private static final String TEST_APP_NAME = "test-app-name";
 
-    BaseSdkException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  @Test
+  void get_returnsFormattedString() {
+    String expectedFormattedRegex = "test-app-name/unknown" +
+        "\\s\\(java.version/.*," +
+        "\\sjava.runtime.version/.*," +
+        "\\sos.name/.*," +
+        "\\sos.version/.*\\)";
 
-    static <T> String buildMessage(ErrorSourceType errorSourceType, String clientMessage, Class<T> clazz) {
-        try {
-            final ProjectProperties properties = ProjectProperties.get(clazz);
-            final String name = properties.getName(DEFAULT_NAME);
-            final String version = properties.getVersion(DEFAULT_VERSION);
-            return String.format("%s-%s-%s: %s.", name, version, errorSourceType, clientMessage);
-        } catch (Throwable e) {
-            final String defaultValue = DEFAULT_NAME + "~" + DEFAULT_VERSION + "~"
-                + errorSourceType.toString() + clientMessage;
-            log.trace("Ignoring exception, returning " + defaultValue, e);
-            return defaultValue;
-        }
-    }
-
+    EnvironmentDetails environmentDetails = new EnvironmentDetails(this.getClass());
+    assertTrue(environmentDetails.get(TEST_APP_NAME)
+        .matches(expectedFormattedRegex));
+  }
 }

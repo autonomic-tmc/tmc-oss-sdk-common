@@ -42,30 +42,25 @@
       <version>${lombok.version}</version>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
       <version>${maven-model.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
-    <!-- - - - - - - - - - - - - - - - - -
-    BEGIN TEST ONLY DEPENCENCIES
-    - - - - - - - - - - - - - - - - - - -->
+    <!-- BEGIN TEST DEPENDENCIES -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- This is only needed as a sample for testing the presence of properties we know our SDKs should have-->
     <dependency>
-<!--      This is only needed as a sample for testing the presence of
-            properties we know our SDKs should have-->
       <groupId>com.autonomic.tmc</groupId>
       <artifactId>tmc-auth</artifactId>
       <version>3.0.1-alpha</version>

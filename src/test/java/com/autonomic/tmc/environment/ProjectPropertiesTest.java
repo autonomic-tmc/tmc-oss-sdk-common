@@ -17,12 +17,11 @@
  * under the License
  * ______________________________________________________________________________
  */
-package com.autonomic.tmc.exception;
+package com.autonomic.tmc.environment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.autonomic.tmc.auth.TokenSupplier;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,45 +30,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ProjectPropertiesTest {
 
-  public static final String TEST_APP_NAME = "test-app-name";
-
   @AfterEach
   void tearDown() {
-    ProjectProperties.SINGLETON_INSTANCES.clear();
+    ProjectProperties.removeAll();
   }
 
   @Test
-  void projectProperties_returnsUnknown_when_POMFileNotFound() {
+  void projectProperties_whenPomFileNotFound_returnsDefault() {
     ProjectProperties projectProperties = ProjectProperties.get(this.getClass());
 
-    assertThat(projectProperties.getName()).isEqualTo("[ AUTONOMIC ]");
-    assertThat(projectProperties.getVersion()).isEqualTo("[ SDK ]");
-  }
-
-  @Test
-  void projectPropertiesGetFormattedUserAgent_returnFormattedUserAgent() {
-    ProjectProperties projectProperties = ProjectProperties.get(this.getClass());
-    assertThat(projectProperties.getFormattedUserAgent(TEST_APP_NAME))
-        .isEqualTo(TEST_APP_NAME + "/unknown");
+    assertThat(projectProperties.getName("[ AUTONOMIC ]")).isEqualTo("[ AUTONOMIC ]");
+    assertThat(projectProperties.getVersion("[ SDK ]")).isEqualTo("[ SDK ]");
   }
 
   @Test
   void projectProperties_usedWithDiffPackages_maintainsTwoDiffInstances() {
-    ProjectProperties authProjectProperties = ProjectProperties.get(TokenSupplier.class);
-    assertThat(authProjectProperties).isNotEqualTo(ProjectProperties.get(Test.class));
-    assertThat(ProjectProperties.SINGLETON_INSTANCES.size()).isEqualTo(2);
+    assertThat(ProjectProperties.get(TokenSupplier.class))
+        .isNotEqualTo(ProjectProperties.get(Test.class));
   }
 
   @Test
   void projectProperties_forSameProject_maintainsSingleInstance() {
-    ProjectProperties junitTestProjectProperties = ProjectProperties.get(Test.class);
-    assertThat(junitTestProjectProperties).isEqualTo(ProjectProperties.get(ExtendWith.class));
-    assertThat(ProjectProperties.SINGLETON_INSTANCES.size()).isEqualTo(1);
-  }
-
-  @Test
-  void projectProperties_implementationTitleIsNull_usesClassName() {
-    ProjectProperties.get(MockitoExtension.class);
-    assertThat(ProjectProperties.SINGLETON_INSTANCES.containsKey(null)).isFalse();
+    assertThat(ProjectProperties.get(Test.class))
+        .isEqualTo(ProjectProperties.get(ExtendWith.class));
   }
 }

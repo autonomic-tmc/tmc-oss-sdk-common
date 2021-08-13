@@ -17,37 +17,39 @@
  * under the License
  * ______________________________________________________________________________
  */
-package com.autonomic.tmc.exception;
+package com.autonomic.tmc.environment;
 
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_NAME;
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_VERSION;
+import static java.lang.String.format;
 
-import com.autonomic.tmc.environment.ProjectProperties;
-import lombok.extern.slf4j.Slf4j;
+/**
+ * Combines information from {@link SystemProperties} and {@link ProjectProperties} to
+ * give all available details about the runtime environment.
+ */
+public class EnvironmentDetails {
+  private static final String UNKNOWN = "unknown";
 
-@Slf4j
-public class BaseSdkException extends RuntimeException {
+  private final ProjectProperties projectProperties;
+  private final SystemProperties systemProperties;
 
-    BaseSdkException(String message) {
-        super(message);
-    }
+  public <T> EnvironmentDetails(Class<T> clazz) {
+    this.projectProperties = ProjectProperties.get(clazz);
+    this.systemProperties = new SystemProperties();
+  }
 
-    BaseSdkException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    static <T> String buildMessage(ErrorSourceType errorSourceType, String clientMessage, Class<T> clazz) {
-        try {
-            final ProjectProperties properties = ProjectProperties.get(clazz);
-            final String name = properties.getName(DEFAULT_NAME);
-            final String version = properties.getVersion(DEFAULT_VERSION);
-            return String.format("%s-%s-%s: %s.", name, version, errorSourceType, clientMessage);
-        } catch (Throwable e) {
-            final String defaultValue = DEFAULT_NAME + "~" + DEFAULT_VERSION + "~"
-                + errorSourceType.toString() + clientMessage;
-            log.trace("Ignoring exception, returning " + defaultValue, e);
-            return defaultValue;
-        }
-    }
-
+  /**
+   * Returns environment details as a pre-formatted String
+   *
+   * @param defaultAppName Default name to use for the project
+   * @return a String in the following format, where {...} are placeholders: <br>
+   * <code>{sdk-name}/{sdk-version} (java.version/{x}, java.runtime.version/{y}, os.name/{a}, os.version/{b})</code>
+   */
+  public String get(String defaultAppName) {
+    return format("%s/%s (java.version/%s, java.runtime.version/%s, os.name/%s, os.version/%s)",
+        projectProperties.getName(defaultAppName), projectProperties.getVersion(UNKNOWN),
+        systemProperties.getJavaVersion(),
+        systemProperties.getJavaRuntimeVersion(),
+        systemProperties.getOsName(),
+        systemProperties.getOsVersion()
+    );
+  }
 }

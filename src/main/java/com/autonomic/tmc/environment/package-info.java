@@ -17,37 +17,13 @@
  * under the License
  * ______________________________________________________________________________
  */
-package com.autonomic.tmc.exception;
-
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_NAME;
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_VERSION;
-
-import com.autonomic.tmc.environment.ProjectProperties;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class BaseSdkException extends RuntimeException {
-
-    BaseSdkException(String message) {
-        super(message);
-    }
-
-    BaseSdkException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    static <T> String buildMessage(ErrorSourceType errorSourceType, String clientMessage, Class<T> clazz) {
-        try {
-            final ProjectProperties properties = ProjectProperties.get(clazz);
-            final String name = properties.getName(DEFAULT_NAME);
-            final String version = properties.getVersion(DEFAULT_VERSION);
-            return String.format("%s-%s-%s: %s.", name, version, errorSourceType, clientMessage);
-        } catch (Throwable e) {
-            final String defaultValue = DEFAULT_NAME + "~" + DEFAULT_VERSION + "~"
-                + errorSourceType.toString() + clientMessage;
-            log.trace("Ignoring exception, returning " + defaultValue, e);
-            return defaultValue;
-        }
-    }
-
-}
+/**
+ * Utility classes that provide useful information about the runtime environment.
+ * This information includes, but is not limited to:
+ * <ul>
+ *   <li>The name and the version of the SDK</li>
+ *   <li>The name and the version of the OS</li>
+ *   <li>The versions of Java and Java Runtime</li>
+ * </ul>
+ */
+package com.autonomic.tmc.environment;

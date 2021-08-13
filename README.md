@@ -11,7 +11,7 @@ When you receive an exception from an SDK, you will immediately know:
   * The source of the exception (service or the SDK client)
   * Explanation for the exception (if applicable)
   * The original exception
-    
+
 An example is provided below:
 
 ```shell
@@ -20,7 +20,18 @@ com.autonomic.tmc.auth.exception.SdkServiceException: tmc-auth-3.0.5-beta-SERVIC
    Error: code=unauthorized and httpStatusCode=401
 ```
 
+### [Environment](src/main/java/com/autonomic/tmc/environment)
+Utility classes that provide useful information about the runtime environment. This information includes, but is not limited to, the name and the version of the SDK, the name and the version of OS, the versions of Java and Java Runtime.
+  * `SystemProperties` and `ProjectProperties` classes allow you to access pieces of this information individually.
+
+  * `EnvironmentDetails` class gives you all of this information as a pre-formatted String value.
+
+      * Format of the String is as follows, where {...} are placeholders.
+
+        `{sdk-name}/{sdk-version} (java.version/{x}, java.runtime.version/{y}, os.name/{a}, os.version/{b})`
+
 ## Adding this artifact as a dependency
+
 The `tmc-oss-sdk-common` artifact is distributed as a JAR file for easy consumption. If you are using one of our TMC Java SDKs, this artifact has already been included as dependency. You will get it by default. However, if you also want to include the `tmc-oss-sdk-common` artifact manually, you can add the following dependencies noted below. (Note: This is not common practice.)
 
 ### Distribution Management
@@ -54,6 +65,7 @@ For this project, a Maven build is provided.
 ```shell
 mvn clean install
 ```
+
 ## 3rd Party Components
 
 This project has binary dependencies on other open source projects.  These components are listed in the [THIRD-PARTY.txt](THIRD-PARTY.txt) file.

@@ -17,37 +17,55 @@
  * under the License
  * ______________________________________________________________________________
  */
-package com.autonomic.tmc.exception;
+package com.autonomic.tmc.environment;
 
-import static com.autonomic.tmc.exception.BaseSdkException.DEFAULT_NAME;
-import static com.autonomic.tmc.exception.BaseSdkException.DEFAULT_VERSION;
-import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Provides project properties - name and version - using Manifest, if available.
+ */
 @Slf4j
 public final class ProjectProperties {
 
-  static final HashMap<String, ProjectProperties> SINGLETON_INSTANCES = new HashMap<>();
+  public static final String DEFAULT_NAME = "[ AUTONOMIC ]";
+  public static final String DEFAULT_VERSION = "[ SDK ]";
 
-  Manifest manifest;
+  private static final Map<String, ProjectProperties> SINGLETON_INSTANCES = new HashMap<>();
+
+  private Manifest manifest;
 
   private <T> ProjectProperties(Class<T> clazz) {
     setManifest(clazz);
   }
 
+  /**
+   * @param clazz The class used to find package information
+   * @param <T> Type of clazz
+   * @return An instance of <code>ProjectProperties</code> for given class
+   */
   public static <T> ProjectProperties get(Class<T> clazz) {
     final String classKey = ofNullable(clazz.getPackage().getImplementationTitle())
         .orElseGet(clazz::getName);
-    return SINGLETON_INSTANCES.computeIfAbsent(classKey, key -> new ProjectProperties(clazz));
+    return put(classKey, new ProjectProperties(clazz));
   }
 
+  public static ProjectProperties put(String classKey, ProjectProperties projectProperties) {
+    return SINGLETON_INSTANCES.computeIfAbsent(classKey, s -> projectProperties);
+  }
+
+  public static void removeAll() {
+    SINGLETON_INSTANCES.clear();
+  }
+
+  @SuppressWarnings("squid:S1181")
   private <T> void setManifest(Class<T> clazz) {
     try {
       String jarPath = clazz.getProtectionDomain()
@@ -59,41 +77,40 @@ public final class ProjectProperties {
         // library.
         manifest = jarFile.getManifest();
       }
-    } catch (Throwable e) {
-      log.debug("Unable to find manifest", e);
+    } catch (Throwable t) {
+      log.debug("Unable to find manifest", t);
     }
   }
 
+  @SuppressWarnings("squid:S1181")
   private String getAttribute(String name, String defaultValue) {
     try {
-      return ofNullable(manifest)
-          .map(m -> m.getMainAttributes().getValue(name))
-          .orElse(defaultValue);
-    } catch (Throwable e) {
-      log.trace("Ignoring exception, returning " + defaultValue, e);
+      return ofNullable(getValueFromManifest(name, defaultValue)).orElse(defaultValue);
+    } catch (Throwable t) {
+      log.trace("Ignoring exception, returning " + defaultValue, t);
       return defaultValue;
     }
   }
 
-  String getName() {
-    return getName(DEFAULT_NAME);
+  private String getValueFromManifest(String name, String defaultValue) {
+    return ofNullable(manifest)
+        .map(m -> m.getMainAttributes().getValue(name))
+        .orElse(defaultValue);
   }
 
-  String getName(String defaultName) {
+  /**
+   * @param defaultName default value to use for the name
+   * @return Value of Implementation-Title, if available, or the specified default value
+   */
+  public String getName(String defaultName) {
     return getAttribute(IMPLEMENTATION_TITLE.toString(), defaultName);
   }
 
-  String getVersion() {
-    return getVersion(DEFAULT_VERSION);
-  }
-
-  String getVersion(String defaultVersion) {
+  /**
+   * @param defaultVersion default value to use for the version
+   * @return Value of Implementation-Version, if available, or the specified default value
+   */
+  public String getVersion(String defaultVersion) {
     return getAttribute(IMPLEMENTATION_VERSION.toString(), defaultVersion);
-  }
-
-  public String getFormattedUserAgent(String defaultAppName) {
-    String name = getName(defaultAppName);
-    String version = getVersion("unknown");
-    return format("%s/%s", name, version);
   }
 }

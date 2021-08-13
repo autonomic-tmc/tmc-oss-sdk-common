@@ -17,37 +17,46 @@
  * under the License
  * ______________________________________________________________________________
  */
-package com.autonomic.tmc.exception;
+package com.autonomic.tmc.environment;
 
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_NAME;
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_VERSION;
-
-import com.autonomic.tmc.environment.ProjectProperties;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Provides values for various System level properties
+ */
 @Slf4j
-public class BaseSdkException extends RuntimeException {
+@Getter
+public class SystemProperties {
+  private static final String UNKNOWN = "unknown";
 
-    BaseSdkException(String message) {
-        super(message);
+  private final String javaVersion;
+  private final String javaRuntimeVersion;
+  private final String osName;
+  private final String osVersion;
+
+  public SystemProperties() {
+    this.javaVersion = getEncodedValueForProperty("java.version");
+    this.javaRuntimeVersion = getEncodedValueForProperty("java.runtime.version");
+    this.osName = getEncodedValueForProperty("os.name");
+    this.osVersion = getEncodedValueForProperty("os.version");
+  }
+
+  private String getEncodedValueForProperty(String propertyName) {
+    try {
+      String systemPropertyValue = System.getProperty(propertyName, UNKNOWN);
+      return getEncodedValue(systemPropertyValue);
+    } catch (Exception e) {
+      log.warn("Unable to find a value for system property [{}], defaulting to {}",
+          propertyName, UNKNOWN, e);
+      return UNKNOWN;
     }
+  }
 
-    BaseSdkException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    static <T> String buildMessage(ErrorSourceType errorSourceType, String clientMessage, Class<T> clazz) {
-        try {
-            final ProjectProperties properties = ProjectProperties.get(clazz);
-            final String name = properties.getName(DEFAULT_NAME);
-            final String version = properties.getVersion(DEFAULT_VERSION);
-            return String.format("%s-%s-%s: %s.", name, version, errorSourceType, clientMessage);
-        } catch (Throwable e) {
-            final String defaultValue = DEFAULT_NAME + "~" + DEFAULT_VERSION + "~"
-                + errorSourceType.toString() + clientMessage;
-            log.trace("Ignoring exception, returning " + defaultValue, e);
-            return defaultValue;
-        }
-    }
-
+  protected String getEncodedValue(String systemPropertyValue) throws UnsupportedEncodingException {
+    return URLEncoder.encode(systemPropertyValue, StandardCharsets.UTF_8.name());
+  }
 }
