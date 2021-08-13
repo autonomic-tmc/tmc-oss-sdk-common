@@ -121,6 +121,7 @@ jobs:
     steps:
       - attach_workspace:
           at: /root
+      - run: mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
           name: Upload to Dependency Track
           command: mvn clean validate -Ddependency-track.projectName=${CIRCLE_PROJECT_REPONAME} -Pdependency-track
