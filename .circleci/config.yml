@@ -106,7 +106,7 @@ jobs:
           at: /root
       - run: mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
-          name: Publish to au-tmc-oss
+          name: Publish to au-tmc-oss and run revapi
           command: /root/publish.sh publish_public
   sonar:
     executor: sonar-image
@@ -193,7 +193,7 @@ workflows:
             - tmc-cloudsmith-context
             - tmc-oss-context
           requires:
-            - build
+            - test
           filters:
             branches:
               only:

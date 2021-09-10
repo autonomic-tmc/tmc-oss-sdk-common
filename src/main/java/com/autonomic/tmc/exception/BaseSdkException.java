@@ -6,7 +6,7 @@
  * ——————————————————————————————————————————————————————————————————————————————
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
- * the License at:
+ * the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -14,15 +14,11 @@
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
- * under the License
+ * under the License.
  * ______________________________________________________________________________
  */
 package com.autonomic.tmc.exception;
 
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_NAME;
-import static com.autonomic.tmc.environment.ProjectProperties.DEFAULT_VERSION;
-
-import com.autonomic.tmc.environment.ProjectProperties;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,18 +32,19 @@ public class BaseSdkException extends RuntimeException {
         super(message, cause);
     }
 
-    static <T> String buildMessage(ErrorSourceType errorSourceType, String clientMessage, Class<T> clazz) {
-        try {
-            final ProjectProperties properties = ProjectProperties.get(clazz);
-            final String name = properties.getName(DEFAULT_NAME);
-            final String version = properties.getVersion(DEFAULT_VERSION);
-            return String.format("%s-%s-%s: %s.", name, version, errorSourceType, clientMessage);
-        } catch (Throwable e) {
-            final String defaultValue = DEFAULT_NAME + "~" + DEFAULT_VERSION + "~"
-                + errorSourceType.toString() + clientMessage;
-            log.trace("Ignoring exception, returning " + defaultValue, e);
-            return defaultValue;
-        }
-    }
+    public static final String DEFAULT_NAME = "[ AUTONOMIC ]";
+    public static final String DEFAULT_VERSION = "[ SDK ]";
 
+    static String buildMessage(ErrorSourceType errorSourceType, String clientMessage, String sdkName, String sdkVersion) {
+
+        if (sdkName == null || sdkName.isEmpty()) {
+            sdkName = DEFAULT_NAME;
+        }
+
+        if (sdkVersion == null || sdkVersion.isEmpty()) {
+            sdkVersion = DEFAULT_VERSION;
+        }
+
+        return String.format("%s-%s-%s: %s.", sdkName, sdkVersion, errorSourceType, clientMessage);
+    }
 }
