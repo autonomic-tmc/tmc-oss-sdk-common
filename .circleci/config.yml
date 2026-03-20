@@ -200,7 +200,9 @@ workflows:
   build_and_test:
     jobs:
       - scan_secrets:
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - build:
           requires:
             - scan_secrets
