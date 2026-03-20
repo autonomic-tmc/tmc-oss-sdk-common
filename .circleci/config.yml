@@ -227,11 +227,34 @@ workflows:
             - tmc-oss-context
             - ford-supplier-jfrog-context
           requires:
+            - sonar
+          filters:
+            branches:
+              only: rc
+      - private-snapshot-jfrog-dependency-track:
+          context:
+            - tmc-oss-context
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
+          requires:
             - test
           filters:
             branches:
               only: rc
       - push-to-public:
+          context:
+            - tmc-cloudsmith-context
+            - tmc-oss-context
+            - ford-supplier-jfrog-context
+            - ford-supplier-jfrog-context
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - main
+                - /release\/.*/
+      - push-to-public-jfrog:
           context:
             - tmc-cloudsmith-context
             - tmc-oss-context
