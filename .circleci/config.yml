@@ -188,7 +188,9 @@ workflows:
   build_and_test:
     jobs:
       - scan_secrets:
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - build:
           requires:
             - scan_secrets
@@ -198,11 +200,15 @@ workflows:
               ignore:
                 - /.*docs.*/
                 - /.*readme.*/
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - test:
           requires:
             - build
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - sonar:
           requires:
             - test
