@@ -254,18 +254,6 @@ workflows:
               only:
                 - main
                 - /release\/.*/
-      - push-to-public-jfrog:
-          context:
-            - tmc-cloudsmith-context
-            - tmc-oss-context
-            - ford-supplier-jfrog-context
-          requires:
-            - test
-          filters:
-            branches:
-              only:
-                - main
-                - /release\/.*/
 
   release:
     jobs:
