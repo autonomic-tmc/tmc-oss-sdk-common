@@ -20,7 +20,7 @@ executors:
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java17
         auth:
           username: ${JFROG_USERNAME}
           password: ${JFROG_TOKEN}
@@ -223,8 +223,8 @@ workflows:
             - ford-supplier-jfrog-context
       - private-snapshot-dependency-track:
           context:
-            - tmc-oss-context
             - tmc-cloudsmith-context
+            - tmc-oss-context
             - ford-supplier-jfrog-context
           requires:
             - test
@@ -287,6 +287,6 @@ workflows:
           requires:
             - build
           context:
-            - tmc-oss-context
             - tmc-cloudsmith-context
+            - tmc-oss-context
             - ford-supplier-jfrog-context
