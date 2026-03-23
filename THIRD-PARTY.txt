@@ -12,12 +12,12 @@ RESULTING FROM ANY USE OR DISTRIBUTION OF THIS LIST.
 
 In case of any license issues related to TMC OSS SDK Common Classes, please contact support@autonomic.ai.
 
-Date Generated: 2022-01-11 21:33
+Date Generated: 2026-03-23 17:48
 
  (Apache License, Version 2.0) TMC Auth SDK (com.autonomic.tmc:tmc-auth:3.0.1-alpha - no url defined)
  (Apache License, Version 2.0) JCIP Annotations under Apache License (com.github.stephenc.jcip:jcip-annotations:1.0-1 - http://stephenc.github.com/jcip-annotations)
- (Apache License, Version 2.0) Nimbus LangTag (com.nimbusds:lang-tag:1.5 - https://bitbucket.org/connect2id/nimbus-language-tags)
- (Apache License, Version 2.0) Nimbus JOSE+JWT (com.nimbusds:nimbus-jose-jwt:9.16-preview.1 - https://bitbucket.org/connect2id/nimbus-jose-jwt)
+ (Apache License, Version 2.0) Nimbus LangTag (com.nimbusds:lang-tag:1.7 - https://bitbucket.org/connect2id/nimbus-language-tags)
+ (Apache License, Version 2.0) Nimbus JOSE+JWT (com.nimbusds:nimbus-jose-jwt:10.8 - https://bitbucket.org/connect2id/nimbus-jose-jwt)
  (Apache License, Version 2.0) OAuth 2.0 SDK with OpenID Connect extensions (com.nimbusds:oauth2-oidc-sdk:6.23 - https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions)
  (CDDL 1.1) JavaMail API (com.sun.mail:javax.mail:1.6.1 - http://javaee.github.io/javamail/javax.mail)
  (CDDL 1.1) JavaBeans Activation Framework (JAF) (javax.activation:activation:1.1 - http://java.sun.com/products/javabeans/jaf/index.jsp)
@@ -42,6 +42,6 @@ Date Generated: 2022-01-11 21:33
  (Apache License, Version 2.0) Objenesis (org.objenesis:objenesis:2.6 - http://objenesis.org)
  (Apache License, Version 2.0) org.opentest4j:opentest4j (org.opentest4j:opentest4j:1.2.0 - https://github.com/ota4j-team/opentest4j)
  (BSD 3-Clause) ASM Core (org.ow2.asm:asm:5.0.4 - http://asm.objectweb.org/asm/)
- (MIT-License) Project Lombok (org.projectlombok:lombok:1.18.0 - https://projectlombok.org)
+ (MIT-License) Project Lombok (org.projectlombok:lombok:1.18.44 - https://projectlombok.org)
  (MIT-License) SLF4J API Module (org.slf4j:slf4j-api:1.7.30 - http://www.slf4j.org)
  (MIT-License) SLF4J LOG4J-12 Binding (org.slf4j:slf4j-log4j12:1.7.30 - http://www.slf4j.org)
