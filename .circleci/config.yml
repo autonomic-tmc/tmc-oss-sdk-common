@@ -165,7 +165,11 @@ jobs:
             mvn versions:set -DnewVersion=LATEST-SNAPSHOT -DprocessAllModules
       - run:
           name: Publish tmc-oss-sdk-common-private to au-tmc-snapshots
-          command: /root/publish.sh publish_snapshot
+          command: |
+            mvn deploy \
+              -Pford-supplier-jfrog-artifactory-snapshots \
+              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-snapshots::${JFROG_URL}/${JFROG_REPO_TMC_OSS}" \
+              -DskipTests
       - run:
           name: Run FOSSA Analysis
           command: |
