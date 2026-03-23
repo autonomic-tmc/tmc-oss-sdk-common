@@ -227,7 +227,7 @@ workflows:
             - tmc-oss-context
             - ford-supplier-jfrog-context
           requires:
-            - sonar
+            - test
           filters:
             branches:
               only: rc
