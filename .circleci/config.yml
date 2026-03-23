@@ -168,7 +168,7 @@ jobs:
           command: |
             mvn deploy \
               -Pford-supplier-jfrog-artifactory-snapshots \
-              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-snapshots::${JFROG_URL}/${JFROG_REPO_TMC_OSS}" \
+              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-snapshots::default::${JFROG_URL}/${JFROG_REPO_TMC_SNAPSHOT}" \
               -DskipTests
       - run:
           name: Run FOSSA Analysis
