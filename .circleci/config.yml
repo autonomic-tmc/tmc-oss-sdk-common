@@ -20,7 +20,7 @@ executors:
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java17
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java
         auth:
           username: ${JFROG_USERNAME}
           password: ${JFROG_TOKEN}
