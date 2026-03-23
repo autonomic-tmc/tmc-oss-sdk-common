@@ -100,7 +100,7 @@ jobs:
           command: |
             mvn deploy \
               -Pcloudsmith-autonomic-au-tmc-oss \
-              -DaltDeploymentRepository="cloudsmith-autonomic-au-tmc-oss::https://maven.cloudsmith.io/autonomic/au-tmc-oss" \
+              -DaltDeploymentRepository="cloudsmith-autonomic-au-tmc-oss::default::https://maven.cloudsmith.io/autonomic/au-tmc-oss" \
               -DskipTests
   publish-public-jfrog:
     executor: snapshot-publisher-image
@@ -115,7 +115,7 @@ jobs:
           command: |
             mvn deploy \
               -Pford-supplier-jfrog-artifactory-tmc-oss \
-              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-tmc-oss::${JFROG_URL}/${JFROG_REPO_TMC_OSS}" \
+              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-tmc-oss::default::${JFROG_URL}/${JFROG_REPO_TMC_OSS}" \
               -DskipTests
   dependency-track:
     executor: java-image
