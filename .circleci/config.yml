@@ -11,36 +11,26 @@ executors:
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: docker.cloudsmith.io/autonomic/public-images/java
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java
         auth:
-          username: ${CS_PUBLIC_USERNAME}
-          password: ${CS_PUBLIC_API_TOKEN}
+          username: ${JFROG_USERNAME}
+          password: ${JFROG_TOKEN}
   snapshot-publisher-image:
     working_directory: /root/repo
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: docker.cloudsmith.io/autonomic/private-images/java
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java
         auth:
-          username: ${CS_PRIVATE_USERNAME}
-          password: ${CS_PRIVATE_API_TOKEN}
+          username: ${JFROG_USERNAME}
+          password: ${JFROG_TOKEN}
   gitleaks-image:
     working_directory: /root/repo
     docker:
-      - image: docker.cloudsmith.io/autonomic/private-images/gitleaks
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/gitleaks
         auth:
-          username: ${CS_PRIVATE_USERNAME}
-          password: ${CS_PRIVATE_API_TOKEN}
-  sonar-image:
-    working_directory: /root/repo
-    environment:
-      LANGUAGE: JAVA-MULTI
-      JAVA_TOOL_OPTIONS: -Xmx1024m
-    docker:
-      - image: docker.cloudsmith.io/autonomic/private-images/sonar
-        auth:
-          username: ${CS_PRIVATE_USERNAME}
-          password: ${CS_PRIVATE_API_TOKEN}
+          username: ${JFROG_USERNAME}
+          password: ${JFROG_TOKEN}
 
 jobs:
   scan_secrets:
@@ -66,7 +56,7 @@ jobs:
       - run:
           name: Build tmc-oss-sdk-common
           command: |
-            mvn dependency:go-offline -DskipTests install
+            mvn dependency:go-offline -DskipTests install -Pford-supplier-jfrog-artifactory-tmc-oss
       - persist_to_workspace:
           root: /root
           paths:
@@ -82,7 +72,7 @@ jobs:
           at: /root
       - run:
           name: Run unit tests
-          command: mvn verify
+          command: mvn verify -Pford-supplier-jfrog-artifactory-tmc-oss
       - run:
           name: Save test results
           command: |
@@ -107,24 +97,57 @@ jobs:
       - run: mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
           name: Publish to au-tmc-oss and run revapi
-          command: /root/publish.sh publish_public
-  sonar:
-    executor: sonar-image
+          command: |
+            mvn deploy \
+              -Pcloudsmith-autonomic-au-tmc-oss \
+              -DaltDeploymentRepository="cloudsmith-autonomic-au-tmc-oss::https://maven.cloudsmith.io/autonomic/au-tmc-oss" \
+              -DskipTests
+  publish-public-jfrog:
+    executor: snapshot-publisher-image
+    working_directory: /root/repo
     steps:
       - attach_workspace:
           at: /root
+      - run: |
+          mvn versions:use-dep-version -Dincludes=com.autonomic.tmc:tmc-oss-parent -DdepVersion=LATEST-SNAPSHOT -DforceVersion=true
+          mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
-          name: Analyze on SonarCloud
-          command: ../sonar.sh
+          name: Publish to tmc-oss and run revapi
+          command: |
+            mvn deploy \
+              -Pford-supplier-jfrog-artifactory-tmc-oss \
+              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-tmc-oss::${JFROG_URL}/${JFROG_REPO_TMC_OSS}" \
+              -DskipTests
   dependency-track:
     executor: java-image
     steps:
       - attach_workspace:
           at: /root
+      - run:
+          name: Install FOSSA CLI
+          command: |
+            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
       - run: mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
           name: Upload to Dependency Track
-          command: mvn clean validate -Ddependency-track.projectName=${CIRCLE_PROJECT_REPONAME} -Pdependency-track
+          command: mvn install
+      - run:
+          name: Run FOSSA Analysis
+          command: |
+            fossa analyze \
+              --with-telemetry-scope off \
+              --endpoint "https://ford.fossa.com/" \
+              --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+              --team "TMC-50844" \
+              --policy "Website/Hosted Service Use" \
+              --branch "main" \
+              --revision "<<pipeline.git.revision>>" \
+              --project-url "<<pipeline.project.git_url>>" \
+              --project-label "team:telemetry-data" \
+              --json
+      - run:
+          name: Fail build if FOSSA issues
+          command: fossa test --with-telemetry-scope off  --endpoint "https://ford.fossa.com/"  --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
 
   private-snapshot-dependency-track:
     executor: snapshot-publisher-image
@@ -133,18 +156,33 @@ jobs:
       - attach_workspace:
           at: /root
       - run:
+          name: Install FOSSA CLI
+          command: |
+            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
+      - run:
           name: set new version
           command: |
-            if [[ -z ${ALLOW_PUBLISH} ]]; then
-              mvn versions:set -DnewVersion=LATEST-SNAPSHOT -DprocessAllModules
-              mvn install -DskipTests -DprocessAllModules
-            fi
+            mvn versions:set -DnewVersion=LATEST-SNAPSHOT -DprocessAllModules
       - run:
           name: Publish tmc-oss-sdk-common-private to au-tmc-snapshots
           command: /root/publish.sh publish_snapshot
       - run:
-          name: Upload to Dependency Track
-          command: mvn clean validate -Ddependency-track.projectName=${CIRCLE_PROJECT_REPONAME} -Pdependency-track
+          name: Run FOSSA Analysis
+          command: |
+            fossa analyze \
+              --with-telemetry-scope off \
+              --endpoint "https://ford.fossa.com/" \
+              --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+              --team "TMC-50844" \
+              --policy "Website/Hosted Service Use" \
+              --branch "<<pipeline.git.branch>>" \
+              --revision "<<pipeline.git.revision>>" \
+              --project-url "<<pipeline.project.git_url>>" \
+              --project-label "team:telemetry-data" \
+              --json
+      - run:
+          name: Fail build if FOSSA issues
+          command: fossa test --with-telemetry-scope off  --endpoint "https://ford.fossa.com/"  --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
   push-to-public:
     executor: snapshot-publisher-image
     steps:
@@ -158,7 +196,9 @@ workflows:
   build_and_test:
     jobs:
       - scan_secrets:
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - build:
           requires:
             - scan_secrets
@@ -168,23 +208,22 @@ workflows:
               ignore:
                 - /.*docs.*/
                 - /.*readme.*/
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - test:
           requires:
             - build
-          context: tmc-cloudsmith-context
-      - sonar:
-          requires:
-            - test
           context:
-            - tmc-oss-context
             - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - private-snapshot-dependency-track:
           context:
             - tmc-oss-context
             - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
           requires:
-            - sonar
+            - test
           filters:
             branches:
               only: rc
@@ -192,6 +231,7 @@ workflows:
           context:
             - tmc-cloudsmith-context
             - tmc-oss-context
+            - ford-supplier-jfrog-context
           requires:
             - test
           filters:
@@ -199,6 +239,7 @@ workflows:
               only:
                 - main
                 - /release\/.*/
+
   release:
     jobs:
       #Run Publish on GitHub release
@@ -208,7 +249,9 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - build:
           filters:
             tags:
@@ -217,7 +260,9 @@ workflows:
               ignore: /.*/
           requires:
             - scan_secrets
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - publish-public:
           filters:
             tags:
@@ -226,7 +271,9 @@ workflows:
               ignore: /.*/
           requires:
             - build
-          context: tmc-cloudsmith-context
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
       - dependency-track:
           filters:
             tags:
@@ -238,3 +285,4 @@ workflows:
           context:
             - tmc-oss-context
             - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
