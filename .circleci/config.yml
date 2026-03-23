@@ -11,16 +11,16 @@ executors:
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: docker.cloudsmith.io/autonomic/public-images/java
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java17
         auth:
-          username: ${CS_PUBLIC_USERNAME}
-          password: ${CS_PUBLIC_API_TOKEN}
+          username: ${JFROG_USERNAME}
+          password: ${JFROG_TOKEN}
   snapshot-publisher-image:
     working_directory: /root/repo
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java17
         auth:
           username: ${JFROG_USERNAME}
           password: ${JFROG_TOKEN}
@@ -66,7 +66,7 @@ jobs:
       - run:
           name: Build tmc-oss-sdk-common
           command: |
-            mvn dependency:go-offline -DskipTests install
+            mvn dependency:go-offline -DskipTests install -Pford-supplier-jfrog-artifactory-tmc-oss
       - persist_to_workspace:
           root: /root
           paths:
@@ -82,7 +82,7 @@ jobs:
           at: /root
       - run:
           name: Run unit tests
-          command: mvn verify
+          command: mvn verify -Pford-supplier-jfrog-artifactory-tmc-oss
       - run:
           name: Save test results
           command: |
@@ -107,7 +107,11 @@ jobs:
       - run: mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
           name: Publish to au-tmc-oss and run revapi
-          command: /root/publish.sh publish_public
+          command: |
+            mvn deploy \
+              -Pcloudsmith-autonomic-au-tmc-oss \
+              -DaltDeploymentRepository="cloudsmith-autonomic-au-tmc-oss::https://maven.cloudsmith.io/autonomic/au-tmc-oss" \
+              -DskipTests
   publish-public-jfrog:
     executor: snapshot-publisher-image
     working_directory: /root/repo
@@ -137,10 +141,31 @@ jobs:
     steps:
       - attach_workspace:
           at: /root
+      - run:
+          name: Install FOSSA CLI
+          command: |
+            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
       - run: mvn versions:set -DnewVersion=${CIRCLE_TAG}
       - run:
           name: Upload to Dependency Track
-          command: mvn clean validate -Ddependency-track.projectName=${CIRCLE_PROJECT_REPONAME} -Pdependency-track
+          command: mvn install
+      - run:
+          name: Run FOSSA Analysis
+          command: |
+            fossa analyze \
+              --with-telemetry-scope off \
+              --endpoint "https://ford.fossa.com/" \
+              --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+              --team "TMC-50844" \
+              --policy "Website/Hosted Service Use" \
+              --branch "main" \
+              --revision "<<pipeline.git.revision>>" \
+              --project-url "<<pipeline.project.git_url>>" \
+              --project-label "team:telemetry-data" \
+              --json
+      - run:
+          name: Fail build if FOSSA issues
+          command: fossa test --with-telemetry-scope off  --endpoint "https://ford.fossa.com/"  --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
 
   private-snapshot-dependency-track:
     executor: snapshot-publisher-image
@@ -149,32 +174,33 @@ jobs:
       - attach_workspace:
           at: /root
       - run:
+          name: Install FOSSA CLI
+          command: |
+            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
+      - run:
           name: set new version
           command: |
             mvn versions:set -DnewVersion=LATEST-SNAPSHOT -DprocessAllModules
-            mvn install -DskipTests -DprocessAllModules
       - run:
           name: Publish tmc-oss-sdk-common-private to au-tmc-snapshots
           command: /root/publish.sh publish_snapshot
-  private-snapshot-jfrog-dependency-track:
-    executor: snapshot-publisher-image
-    working_directory: /root/repo
-    steps:
-      - attach_workspace:
-          at: /root
       - run:
-          name: set new version
+          name: Run FOSSA Analysis
           command: |
-            mvn versions:set -DnewVersion=LATEST-SNAPSHOT -DprocessAllModules
-            mvn install -DskipTests -DprocessAllModules
+            fossa analyze \
+              --with-telemetry-scope off \
+              --endpoint "https://ford.fossa.com/" \
+              --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+              --team "TMC-50844" \
+              --policy "Website/Hosted Service Use" \
+              --branch "<<pipeline.git.branch>>" \
+              --revision "<<pipeline.git.revision>>" \
+              --project-url "<<pipeline.project.git_url>>" \
+              --project-label "team:telemetry-data" \
+              --json
       - run:
-          name: Publish tmc-oss-sdk-common-private to au-tmc-snapshots
-          command: |
-            mvn deploy -Pford-supplier-jfrog-artifactory-snapshots \
-              -DaltDeploymentRepository="ford-supplier-jfrog-artifactory-snapshots::default::${JFROG_URL}/${JFROG_REPO_SNAPSHOTS}"
-      - run:
-          name: Upload to Dependency Track
-          command: mvn clean validate -Ddependency-track.projectName=${CIRCLE_PROJECT_REPONAME} -Pdependency-track
+          name: Fail build if FOSSA issues
+          command: fossa test --with-telemetry-scope off  --endpoint "https://ford.fossa.com/"  --project "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
   push-to-public:
     executor: snapshot-publisher-image
     steps:
@@ -217,16 +243,6 @@ workflows:
             - tmc-cloudsmith-context
             - ford-supplier-jfrog-context
       - private-snapshot-dependency-track:
-          context:
-            - tmc-oss-context
-            - tmc-cloudsmith-context
-            - ford-supplier-jfrog-context
-          requires:
-            - sonar
-          filters:
-            branches:
-              only: rc
-      - private-snapshot-jfrog-dependency-track:
           context:
             - tmc-oss-context
             - tmc-cloudsmith-context
