@@ -20,7 +20,7 @@ executors:
     environment:
       JAVA_TOOL_OPTIONS: -Xmx1024m
     docker:
-      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java
+      - image: ${JFROG_DOCKER_HOST}/tmc-private-images/java17
         auth:
           username: ${JFROG_USERNAME}
           password: ${JFROG_TOKEN}
@@ -160,7 +160,7 @@ jobs:
           command: |
             curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
       - run:
-          name: set new version
+          name: Run FOSSA Analysis
           command: |
             mvn versions:set -DnewVersion=LATEST-SNAPSHOT -DprocessAllModules
       - run:
