@@ -230,18 +230,18 @@ workflows:
           filters:
             branches:
               only: rc
-      - push-to-public:
-          context:
-            - tmc-cloudsmith-context
-            - tmc-oss-context
-            - ford-supplier-jfrog-context
-          requires:
-            - test
-          filters:
-            branches:
-              only:
-                - main
-                - /release\/.*/
+#      - push-to-public:
+#          context:
+#            - tmc-cloudsmith-context
+#            - tmc-oss-context
+#            - ford-supplier-jfrog-context
+#          requires:
+#            - test
+#          filters:
+#            branches:
+#              only:
+#                - main
+#                - /release\/.*/
 
   release:
     jobs:
@@ -267,6 +267,17 @@ workflows:
             - tmc-cloudsmith-context
             - ford-supplier-jfrog-context
       - publish-public:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - build
+          context:
+            - tmc-cloudsmith-context
+            - ford-supplier-jfrog-context
+      - publish-public-jfrog:
           filters:
             tags:
               only: /.*/
