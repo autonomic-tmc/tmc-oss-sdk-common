@@ -31,7 +31,7 @@
     <junit.version>5.5.2</junit.version>
     <junit.platform.version>1.5.2</junit.platform.version>
     <mockito-core.version>2.23.0</mockito-core.version>
-    <assertj-core.version>3.11.1</assertj-core.version>
+    <assertj-core.version>3.27.7</assertj-core.version>
   </properties>
 
   <dependencies>
