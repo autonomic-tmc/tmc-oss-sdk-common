@@ -32,6 +32,7 @@
     <junit.platform.version>1.5.2</junit.platform.version>
     <mockito-core.version>2.23.0</mockito-core.version>
     <assertj-core.version>3.11.1</assertj-core.version>
+    <plexus-utils.version>3.6.1</plexus-utils.version>
   </properties>
 
   <dependencies>
@@ -51,6 +52,13 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+    </dependency>
+
+    <!-- CVE-2025-67030: Force upgrade of transitive plexus-utils from 3.2.1 to 3.6.1 -->
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>${plexus-utils.version}</version>
     </dependency>
     <!-- BEGIN TEST DEPENDENCIES -->
     <dependency>

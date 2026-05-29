@@ -12,12 +12,12 @@ RESULTING FROM ANY USE OR DISTRIBUTION OF THIS LIST.
 
 In case of any license issues related to TMC OSS SDK Common Classes, please contact support@autonomic.ai.
 
-Date Generated: 2026-03-23 17:48
+Date Generated: 2026-05-29 01:42
 
  (Apache License, Version 2.0) TMC Auth SDK (com.autonomic.tmc:tmc-auth:3.0.1-alpha - no url defined)
  (Apache License, Version 2.0) JCIP Annotations under Apache License (com.github.stephenc.jcip:jcip-annotations:1.0-1 - http://stephenc.github.com/jcip-annotations)
  (Apache License, Version 2.0) Nimbus LangTag (com.nimbusds:lang-tag:1.7 - https://bitbucket.org/connect2id/nimbus-language-tags)
- (Apache License, Version 2.0) Nimbus JOSE+JWT (com.nimbusds:nimbus-jose-jwt:10.8 - https://bitbucket.org/connect2id/nimbus-jose-jwt)
+ (Apache License, Version 2.0) Nimbus JOSE+JWT (com.nimbusds:nimbus-jose-jwt:10.9 - https://bitbucket.org/connect2id/nimbus-jose-jwt)
  (Apache License, Version 2.0) OAuth 2.0 SDK with OpenID Connect extensions (com.nimbusds:oauth2-oidc-sdk:6.23 - https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions)
  (CDDL 1.1) JavaMail API (com.sun.mail:javax.mail:1.6.1 - http://javaee.github.io/javamail/javax.mail)
  (CDDL 1.1) JavaBeans Activation Framework (JAF) (javax.activation:activation:1.1 - http://java.sun.com/products/javabeans/jaf/index.jsp)
@@ -29,7 +29,7 @@ Date Generated: 2026-03-23 17:48
  (Apache License, Version 2.0) Maven Model (org.apache.maven:maven-model:3.6.3 - https://maven.apache.org/ref/3.6.3/maven-model/)
  (Apache License, Version 2.0) org.apiguardian:apiguardian-api (org.apiguardian:apiguardian-api:1.1.0 - https://github.com/apiguardian-team/apiguardian)
  (Apache License, Version 2.0) AssertJ fluent assertions (org.assertj:assertj-core:3.11.1 - http://assertj.org/assertj-core)
- (Apache License, Version 2.0) Plexus Common Utilities (org.codehaus.plexus:plexus-utils:3.2.1 - http://codehaus-plexus.github.io/plexus-utils/)
+ (Apache License, Version 2.0) Plexus Common Utilities (org.codehaus.plexus:plexus-utils:3.6.1 - https://codehaus-plexus.github.io/plexus-utils/)
  (Eclipse Public License 2.0) JUnit Jupiter (Aggregator) (org.junit.jupiter:junit-jupiter:5.5.2 - https://junit.org/junit5/)
  (Eclipse Public License 2.0) JUnit Jupiter API (org.junit.jupiter:junit-jupiter-api:5.5.2 - https://junit.org/junit5/)
  (Eclipse Public License 2.0) JUnit Jupiter Engine (org.junit.jupiter:junit-jupiter-engine:5.5.2 - https://junit.org/junit5/)
